@@ -4,7 +4,7 @@ const movieNotesRoutes = require("./movieNotes.routes")
 
 const routes = Router()
 
-routes.use("/create-user", userRoutes)
-routes.use("/movie-note", movieNotesRoutes)
+routes.use("/user", userRoutes)
+routes.use("/notes", movieNotesRoutes)
 
 module.exports = routes
