@@ -29,8 +29,14 @@ class MovieNotesController {
     )
   }
 
-  async listAll(request, response) {
+  async listAllUserNotes(request, response) {
+    const { user_id } = request.params
+    const { title } = request.query
+
     const allMovieNotes = await knex("movie_notes")
+    .where({ user_id })
+    .whereLike("title", `%${ title }%`)
+    .orderBy("rating", "desc")
 
     response.status(200).json({allMovieNotes})
   }
