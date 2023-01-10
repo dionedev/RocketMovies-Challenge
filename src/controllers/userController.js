@@ -1,9 +1,25 @@
+const knex = require("../database/knex")
+const ErrorHandling = require("../utils/errorHandling")
+
 class UserController {
-  createNewUser(request, response) {
+  async createNewUser(request, response) {
     const { name, email, password } = request.body
 
-    response.status(201).json({ name, email, password })
+    const checkUserExists = await knex("users")
+    .select("email")
+    .where("email", "=", email)
+    .first()
+
+    if(checkUserExists) {
+      console.log(checkUserExists)
+      throw new ErrorHandling("Este email já está sendo utilizado")
+    }
+    
+    await knex("users").insert({ name, email, password })
+
+    return response.status(201).json({
+      message: "Usuário cadastrado com sucesso"
+    })
   }
 }
-
 module.exports = UserController

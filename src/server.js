@@ -3,10 +3,10 @@ const express = require("express")
 const app = express()
 const PORT = 3333
 const routes = require("./routes")
-const migrationsRun = require("./database/sqlite/migrations")
 const ErrorHandling = require("./utils/errorHandling")
+const sqliteConnection = require("./database/sqlite")
 
-migrationsRun()
+sqliteConnection()
 
 app.use(express.json())
 app.use(routes)
