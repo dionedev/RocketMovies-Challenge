@@ -31,14 +31,39 @@ class MovieNotesController {
 
   async listAllUserNotes(request, response) {
     const { user_id } = request.params
-    const { title } = request.query
+    const { title, tags } = request.query
 
-    const allMovieNotes = await knex("movie_notes")
-    .where({ user_id })
-    .whereLike("title", `%${ title }%`)
-    .orderBy("rating", "desc")
+    let allMovieNotes;
 
-    response.status(200).json({allMovieNotes})
+    if(tags) {
+      const filterTags = tags.split(",").map(tag => tag.trim())
+
+      allMovieNotes = await knex("movie_tags")
+      .select(["movie_notes.id", "movie_notes.title", "movie_notes.user_id"])
+      .where("movie_notes.user_id", user_id)
+      .whereIn("name", filterTags)
+      .whereLike("movie_notes.title", `%${ title }%`)
+      .innerJoin("movie_notes", "movie_notes.id", "movie_tags.note_id")
+      .orderBy("movie_notes.title")
+    }
+    else {
+      allMovieNotes = await knex("movie_notes")
+      .where({ user_id })
+      .whereLike("title", `%${ title }%`)
+      .orderBy("rating", "desc")
+    }
+
+    const userRelatedTags = await knex("movie_tags").where({ user_id })
+    const movieTagsAndNotes = allMovieNotes.map(note => {
+      const noteTags = userRelatedTags.filter(tag => tag.note_id === note.id)
+
+      return {
+        ...note,
+        tags: noteTags
+      }
+    })
+    
+    response.status(200).json({ movieTagsAndNotes })
   }
 }
 module.exports = MovieNotesController
