@@ -20,5 +20,17 @@ class UserController {
       message: "Usuário cadastrado com sucesso"
     })
   }
+
+  async showUserById(request, response) {
+    const { user_id } = request.params
+
+    const user = await knex("users").where({ id: user_id })
+    
+    // if(!user) {
+    //   throw new ErrorHandling("Não foi possível encontrar este usuário", 404)
+    // }
+
+    response.status(200).json({ user })
+  }
 }
 module.exports = UserController
