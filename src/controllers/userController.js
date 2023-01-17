@@ -22,15 +22,23 @@ class UserController {
   }
 
   async showUserById(request, response) {
-    const { user_id } = request.params
+    const { id } = request.params
 
-    const user = await knex("users").where({ id: user_id })
+    const user = await knex("users").where({ id })
     
-    // if(!user) {
-    //   throw new ErrorHandling("Não foi possível encontrar este usuário", 404)
-    // }
+    if(user.length != 1) {
+      throw new ErrorHandling("Não foi possível encontrar este usuário", 404)
+    }
 
     response.status(200).json({ user })
+  }
+
+  async deleteUser(request, response) {
+    const { user_id } = request.params
+
+    await knex("users").delete().where({ id: user_id })
+
+    response.status(200).json({ message: "Usuário deletado com sucesso."})
   }
 }
 module.exports = UserController
