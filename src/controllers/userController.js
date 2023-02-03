@@ -1,3 +1,4 @@
+const { hash } = require("bcryptjs")
 const knex = require("../database/knex")
 const ErrorHandling = require("../utils/errorHandling")
 
@@ -13,8 +14,10 @@ class UserController {
     if(checkUserExists) {
       throw new ErrorHandling("Este email já está sendo utilizado")
     }
+
+    const encryptedPassword = await hash(password, 8)
     
-    await knex("users").insert({ name, email, password })
+    await knex("users").insert({ name, email, password: encryptedPassword })
 
     return response.status(201).json({
       message: "Usuário cadastrado com sucesso"
@@ -37,17 +40,20 @@ class UserController {
     const { user_id } = request.params
     const { updated_name, updated_email, current_password, updated_password } = request.body
 
-    const user = await knex("users").where({ id: user_id })
+    const user = await knex("users").where({ id: user_id }).first()
     
-    if(!user.length) {
+    if(!user) {
       throw new ErrorHandling("Não foi possível encontrar este usuário", 404)
     }
 
     const userWithEmail = await knex('users').where({ email: updated_email }).first();
-
+    
     if(userWithEmail && userWithEmail.id !== user.id) {
       throw new ErrorHandling("Este email não está disponível.")
     }
+
+    user.name = updated_name ?? user.name
+    user.email = updated_email ?? user.email
 
     await knex("users")
     .update(
