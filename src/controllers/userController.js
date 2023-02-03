@@ -81,7 +81,7 @@ class UserController {
         name: updated_name,
         email: updated_email,
         password: user.password,
-        updated_at: new Date()
+        updated_at: knex.fn.now()
       }
     ).where({ id: user_id })
 
