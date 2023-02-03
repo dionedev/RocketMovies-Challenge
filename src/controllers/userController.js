@@ -1,4 +1,4 @@
-const { hash } = require("bcryptjs")
+const { hash, compare } = require("bcryptjs")
 const knex = require("../database/knex")
 const ErrorHandling = require("../utils/errorHandling")
 
@@ -17,7 +17,13 @@ class UserController {
 
     const encryptedPassword = await hash(password, 8)
     
-    await knex("users").insert({ name, email, password: encryptedPassword })
+    await knex("users").insert(
+      { 
+        name,
+        email,
+        password: encryptedPassword
+      }
+    )
 
     return response.status(201).json({
       message: "Usuário cadastrado com sucesso"
@@ -55,18 +61,29 @@ class UserController {
     user.name = updated_name ?? user.name
     user.email = updated_email ?? user.email
 
+    if(!current_password && updated_password) {
+      throw new ErrorHandling("Por favor, informe a senha atual para definir uma nova senha")
+    }
+
+    if(current_password && updated_password) {
+      const checkCurrentPassword = await compare(current_password, user.password)
+
+      if(!checkCurrentPassword) {
+        throw new ErrorHandling("A senha digitada não confere com a senha atual")
+      }
+
+      user.password = await hash(updated_password, 8)
+    }
+
     await knex("users")
     .update(
       {
         name: updated_name,
         email: updated_email,
+        password: user.password,
         updated_at: new Date()
       }
     ).where({ id: user_id })
-
-    if(!current_password && updated_password) {
-      throw new ErrorHandling("Por favor, informe a senha atual para definir uma nova senha", 400)
-    }
 
     response.status(200).json({ message: "Usuário atualizado com sucesso"})
   } 
