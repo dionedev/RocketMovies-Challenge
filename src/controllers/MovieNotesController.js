@@ -40,8 +40,14 @@ class MovieNotesController {
     const { user_id } = request.params
     const { title, tags } = request.query
 
-    let allMovieNotes;
+    let allMovieNotes
 
+    const noteExists = await knex("movie_notes").where({ user_id }).first()
+
+    if(!noteExists) {
+      throw new ErrorHandling("Não há notas cadastrada ainda.")
+    }
+    
     if(tags) {
       const filterTags = tags.split(",").map(tag => tag.trim())
 
