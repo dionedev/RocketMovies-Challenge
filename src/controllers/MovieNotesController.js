@@ -1,9 +1,16 @@
 const knex = require("../database/knex")
+const ErrorHandling = require("../utils/errorHandling")
 
 class MovieNotesController {
   async createNote(request, response) {
     const { title, description, rating, tags } = request.body
     const { user_id } = request.params
+
+    const userExists = await knex("users").where({ id: user_id }).first()
+
+    if(!userExists) {
+      throw new ErrorHandling("Não é possível criar esta nota, pois este usuário não existe.", 404)
+    }
 
     const note_id = await knex("movie_notes").insert(
       {
@@ -49,7 +56,6 @@ class MovieNotesController {
     else {
       allMovieNotes = await knex("movie_notes")
       .where({ user_id })
-      .whereLike("title", `%${ title }%`)
       .orderBy("rating", "desc")
     }
 
@@ -65,5 +71,15 @@ class MovieNotesController {
     
     response.status(200).json({ movieTagsAndNotes })
   }
+
+  async deleteNote(request, response) {
+    const { note_id } = request.params
+
+    await knex("movie_notes").delete().where({ id: note_id })
+
+    response.status(200).json({
+      message: "Nota excluída com sucesso"
+    })
+  } 
 }
 module.exports = MovieNotesController
